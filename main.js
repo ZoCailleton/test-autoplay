@@ -1,6 +1,42 @@
 import './reset.css'
 import './style.scss'
 
+let audioState = false;
+
+const toggleAudioElt = document.querySelector('.toggle-audio');
+
+const toggleAudio = () => {
+
+  audioState = !audioState;
+
+  if(audioState) {
+
+    toggleAudioElt.querySelector('img').src = toggleAudioElt.querySelector('img').src.replace('mute', 'audio');
+
+  } else {
+
+    toggleAudioElt.querySelector('img').src = toggleAudioElt.querySelector('img').src.replace('audio', 'mute');
+    
+  }
+
+  for(let iframe of document.querySelectorAll('iframe')) {
+
+    if(audioState) {
+
+      iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'unMute' }), '*');
+
+    } else {
+
+      iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'mute' }), '*');
+
+    }
+    
+  }
+
+}
+
+toggleAudioElt.addEventListener('click', toggleAudio);
+
 const cardObsCallback = (entries, observer) => {
 
   entries.forEach(entry => {
