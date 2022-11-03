@@ -11,11 +11,11 @@ const toggleAudio = () => {
 
   if(audioState) {
 
-    toggleAudioElt.querySelector('img').src = toggleAudioElt.querySelector('img').src.replace('mute', 'audio');
+    toggleAudioElt.querySelector('img').src = './assets/audio.svg';
 
   } else {
 
-    toggleAudioElt.querySelector('img').src = toggleAudioElt.querySelector('img').src.replace('audio', 'mute');
+    toggleAudioElt.querySelector('img').src = './assets/mute.svg'
     
   }
 
