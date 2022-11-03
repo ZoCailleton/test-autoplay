@@ -1,25 +1,44 @@
 import './reset.css'
 import './style.scss'
 
-const cardObsCallback = (entries, observer) => { 
+const cardObsCallback = (entries, observer) => {
+
   entries.forEach(entry => {
 
     let iframe = entry.target.querySelector('iframe');
+    let from = iframe.dataset.from;
 
     if (entry.isIntersecting) {
+
       if (document.querySelector('article.card')) {
         document.querySelector('article.card').classList.remove('active')
       }
-      entry.target.classList.add('active')
-      iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo' }), '*');
-      iframe.contentWindow.postMessage('play', '*');
-    }
-    else {
+
+      entry.target.classList.add('active');
+
+      if(from === 'youtube') {
+
+        iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo' }), '*');
+
+      }
+
+      if(from === 'dailymotion') iframe.contentWindow.postMessage('play', '*');
+
+    } else {
+
       entry.target.classList.remove('active')
-      iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo' }), '*');
-      iframe.contentWindow.postMessage('pause', '*');
+
+      if(from === 'youtube') {
+        
+        iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo' }), '*');
+
+      }
+
+      if(from === 'dailymotion') iframe.contentWindow.postMessage('pause', '*');
+
     }
   });
+
 }
 
 const cardObserver = () => {
