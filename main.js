@@ -1,90 +1,92 @@
 import './reset.css'
 import './style.scss'
 
-let audioState = false;
+const createYTScript = () => {
+  var tag = document.createElement('script');
+  tag.src = "https://www.youtube.com/iframe_api";
+  var firstScriptTag = document.getElementsByTagName('script')[0];
+  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+}
 
-const toggleAudioElt = document.querySelector('.toggle-audio');
+const iframes = document.querySelectorAll(".card .ytb-iframe");
+let iframeIds = [];
 
-const toggleAudio = () => {
+iframes.forEach(function(iframe) {
+	iframeIds.push(iframe.id);
+});
 
-  audioState = !audioState;
+window.onYouTubeIframeAPIReady = function() {
+  iframeIds.forEach(function(iframeId) {
+		new YT.Player(iframeId, {
+      playerVars: {
+        autoplay: 1, controls: 0, modestbranding: true, showinfo: 0
+      },
+			events: {
+				onReady: onPlayerReady
+			}
+		});
+	});
+}
 
-  if(audioState) {
+let iframeObjects = [];
+let iframeObjectsAndHTML = [];
 
-    toggleAudioElt.querySelector('img').src = './assets/audio.svg';
+function onPlayerReady(event) {
 
-  } else {
+	let iframeObject = event.target;
 
-    toggleAudioElt.querySelector('img').src = './assets/mute.svg'
-    
-  }
+  // Stack the ready iframe in a array
+	iframeObjects.push(iframeObject);
 
-  for(let iframe of document.querySelectorAll('iframe')) {
+  iframeObjects[0].playVideo();
 
-    if(audioState) {
-
-      iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'unMute' }), '*');
-
-    } else {
-
-      iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'mute' }), '*');
-
-    }
-    
+  // Check if all iframes are ready
+  if(iframeObjects.length === iframes.length) {
+    // Activate the audio toggle button
+    toggleAudioElt.addEventListener('click', toggleAudio);
+    // Activate the card scroll observer
+    cardObserver();
   }
 
 }
 
-toggleAudioElt.addEventListener('click', toggleAudio);
-
-const cardObsCallback = (entries, observer) => {
+const cardObsCallback = (entries) => {
 
   entries.forEach(entry => {
 
     let iframe = entry.target.querySelector('iframe');
-    let from = iframe.dataset.from;
+    if(iframe != undefined) {
+      console.log(iframe);
+    }
 
-    if (entry.isIntersecting) {
-
-      if (document.querySelector('article.card')) {
-        document.querySelector('article.card').classList.remove('active')
-      }
-
+    if(entry.isIntersecting) {
       entry.target.classList.add('active');
-
-      if(from === 'youtube') {
-
-        iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo' }), '*');
-
-      }
-
-      if(from === 'dailymotion') iframe.contentWindow.postMessage('play', '*');
-
     } else {
-
-      entry.target.classList.remove('active')
-
-      if(from === 'youtube') {
-        
-        iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo' }), '*');
-
-      }
-
-      if(from === 'dailymotion') iframe.contentWindow.postMessage('pause', '*');
-
+      entry.target.classList.remove('active');
     }
   });
-
+  
 }
 
 const cardObserver = () => {
-	const observer = new IntersectionObserver(cardObsCallback, {threshold: 0.8})
-	const arr = document.querySelectorAll('article.card')
+	const observer = new IntersectionObserver(cardObsCallback, {threshold: 0.8});
+	const arr = document.querySelectorAll('article.card');
 	arr.forEach((v) => {
 		observer.observe(v);
 	})
 }
 
-window.addEventListener('DOMContentLoaded', function() {
-  cardObserver();
+let audioState = false;
+const toggleAudioElt = document.querySelector('.toggle-audio');
+
+const toggleAudio = () => {
+  audioState = !audioState;
+  toggleAudioElt.querySelector('img').src = audioState ? './assets/audio.svg' : './assets/mute.svg';
+  for(let iframe of iframeObjects) {
+    audioState ? iframe.unMute() : iframe.mute();
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  createYTScript();
 });
